@@ -43,9 +43,9 @@ pipeline {
                 sshagent(['slave1']) {
                     script {
                         echo "PACKAGE STAGE at ${params.Env}"
-                            sh "scp -o StrictHostKeyChecking=no server_cfg.sh ${remote1}:/home/ec2-user/"
-                            sh "ssh -o StrictHostKeyChecking=no ${remote1} 'bash ~/server_cfg.sh'"
-                                     
+                        sh "scp -o StrictHostKeyChecking=no server_cfg.sh ${remote1}:/home/ec2-user/"
+                        sh "ssh -o StrictHostKeyChecking=no ${remote1} 'bash ~/server_cfg.sh'"
+                        
                     }
 
                 }
