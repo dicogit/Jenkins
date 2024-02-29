@@ -1,13 +1,8 @@
 pipeline {
-    agent any 
-    tools {
-        maven 'slave'
-    }
-    environment {
-        remote1="ec2-user@65.1.107.43"
-        remote2="ec2-user@13.232.23.141"
-        REPONAME='devopsdr/pub:addrbook${BUILD_NUMBER}'
-    }
+    agent any
+	tools {
+		maven 'mymaven'
+	}    
     parameters {
         string (name:'Env', defaultValue:'Linux', description:'Linux Env')
         booleanParam(name:'polar', defaultValue:true, description:'conditional')
@@ -41,24 +36,16 @@ pipeline {
             }
         }
         stage ('PACKAGE') {
+			agent {
+				label 'slave1'
+			}
             steps {
-                sshagent(['ssh-agent']) {
-                    script {
-                        echo "PACKAGE STAGE at ${params.Env}"
-                        withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'dpwd', usernameVariable: 'docr')]) {
-                            sh "scp -o StrictHostKeyChecking=no server_cfg.sh ${remote1}:/home/ec2-user/"
-                            sh "ssh -o StrictHostKeyChecking=no ${remote1} 'bash ~/server_cfg.sh ${REPONAME}'"
-                            sh "ssh -o StrictHostKeyChecking=no ${remote1} 'sudo docker login -u ${docr} -p ${dpwd}'"
-                            sh "ssh -o StrictHostKeyChecking=no ${remote1} 'sudo docker push ${REPONAME}'"
-    
-                        }
-                                    
-                    }
-
+                script {
+                    echo "PACKAGE STAGE at ${params.Env}"
+					sh 'mvn package'
                 }
-                
             }
-        }
+		}
         stage ('DEPLOY') {
             input {
                 message 'Run Addressbook Application'
@@ -68,24 +55,14 @@ pipeline {
                 }
             }
             steps {
-                sshagent(['ssh-agent']) {
-                    script {
+                script {
                         echo "DEPLOY STAGE at ${params.Env}"
-                        withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'dpwd', usernameVariable: 'docr')]) { 
-                            sh "ssh -o StrictHostKeyChecking=no ${remote2} 'sudo yum install docker -y'"
-                            sh "ssh -o StrictHostKeyChecking=no ${remote2} 'sudo systemctl start docker'"
-                            sh "ssh -o StrictHostKeyChecking=no ${remote2} 'sudo docker login -u ${docr} -p ${dpwd}'"
-                            sh "ssh -o StrictHostKeyChecking=no ${remote2} 'sudo docker pull ${REPONAME}'"
-                            sh "ssh -o StrictHostKeyChecking=no ${remote2} 'sudo docker run -itd -P ${REPONAME}'"
-
-                        }
-                        
                     }
-
-                }
-                
+                        
             }
-        }
+		}
+                
     }
     
 }
+    
