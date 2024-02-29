@@ -1,8 +1,11 @@
 pipeline {
-    agent any
+    agent any 
+	environments {
+		remote1="ec2-user@65.0.20.163"
+	}
 	tools {
 		maven 'mymaven'
-	}    
+	}     
     parameters {
         string (name:'Env', defaultValue:'Linux', description:'Linux Env')
         booleanParam(name:'polar', defaultValue:true, description:'conditional')
@@ -36,33 +39,20 @@ pipeline {
             }
         }
         stage ('PACKAGE') {
-			agent {
-				label 'slave1'
-			}
             steps {
-                script {
-                    echo "PACKAGE STAGE at ${params.Env}"
-					sh 'mvn package'
-                }
-            }
-		}
-        stage ('DEPLOY') {
-            input {
-                message 'Run Addressbook Application'
-                ok 'Approved'
-                parameters {
-                    choice(name:'Version', choices:['V1','V2','V3'])
-                }
-            }
-            steps {
-                script {
-                        echo "DEPLOY STAGE at ${params.Env}"
+                sshagent(['slave1']) {
+                    script {
+                        echo "PACKAGE STAGE at ${params.Env}"
+                            sh "scp -o StrictHostKeyChecking=no server_cfg.sh ${remote1}:/home/ec2-user/"
+                            sh "ssh -o StrictHostKeyChecking=no ${remote1} 'bash ~/server_cfg.sh'"
+                                     
                     }
-                        
-            }
-		}
+
+                }
                 
+            }
+        }
+        
     }
     
 }
-    
