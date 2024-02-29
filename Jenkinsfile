@@ -1,6 +1,6 @@
 pipeline {
     agent any 
-	environments {
+	environment {
 		remote1="ec2-user@65.0.20.163"
 	}
 	tools {
