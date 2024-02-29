@@ -3,9 +3,9 @@ pipeline {
 	environment {
 		remote1="ec2-user@65.0.20.163"
 	}
-	tools {
-		maven 'mymaven'
-	}     
+	//tools {
+	//	maven 'mymaven'
+	//}     
     parameters {
         string (name:'Env', defaultValue:'Linux', description:'Linux Env')
         booleanParam(name:'polar', defaultValue:true, description:'conditional')
